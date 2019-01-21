@@ -7,6 +7,6 @@ PARITY=$1
 NODE=`which node`
 
 for i in 1 2 3; do
-    $PARITY --config ./config/node${i}.toml > ./parity-data/node${i}/log 2>&1 &
-    $NODE ./scripts/getReservedPeer.js $i
+    "$PARITY" --config "./config/node${i}.toml" > "./parity-data/node${i}/log" 2>&1 &
+    # $NODE ./scripts/getReservedPeer.js $i
 done
