@@ -6,9 +6,11 @@
     "all": "npm run get-all-submodules && npm run cleanup && npm run compile-pos-contracts && npm run make-spec && npm run start-test-setup && npm run test && npm run stop-test-setup",
     "cleanup": "rm -rf ./parity-data && git checkout ./parity-data",
     "get-all-submodules": "git submodule update --init --remote",
+    "compile-contracts": "npm i && node_modules/.bin/truffle compile",
     "compile-pos-contracts": "cd ./pos-contracts && npm i && npm run compile",
     "make-spec": ". ./scripts/network-spec && cd ./pos-contracts && npm i && node ./scripts/make_spec.js",
     "start-test-setup": "bash scripts/start-test-setup ../parity-ethereum/target/debug/parity",
+    "deploy": ". ./scripts/ERC677-config && node ./scripts/deploy/deploy.js",
     "test": "sleep inf",
     "stop-test-setup": "bash scripts/stop-test-setup"
   },
@@ -19,6 +21,9 @@
   "author": "poa.network",
   "license": "ISC",
   "dependencies": {
-    "assert": "1.4.1"
+    "assert": "1.4.1",
+    "openzeppelin-solidity": "^2.1.2",
+    "truffle": "^5.0.2",
+    "web3-utils": "^1.0.0-beta.34"
   }
 }
