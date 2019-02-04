@@ -4,29 +4,19 @@ const appendFile = promisify(fs.appendFile);
 const { exec } = require('child_process');
 const { URL } = require('url');
 const process = require('process');
-var os = require("os");
-
-main();
+const os = require("os");
 
 const isObject = x => x !== null && typeof x === 'object' && !Array.isArray(x);
-const process = require('process');
-const os = require("os");
-async function main() {
-  inner_main().catch(e => {
-    console.error(e);
-    process.exitCode = 1;
-  });
-}
 
 // assert.ok(process.hasOwnProperty('exitCode'));
-async function inner_main() {
-  assert.ok(process.argv.length > 2, "provide the index of the node that was last to start");
+const inner_main = async () => {
+  // assert.ok(process.argv.length > 2, "provide the index of the node that was last to start");
   const maxAttempts = 5;
-  const node_index = process.argv[2].toString();
+  const node_index = process.argv[2];
 
   // Stop any injection attacks
   const whitelist = /^[0-9]+$/s;
-  if (!whitelist.test(node_index) || typeof node_index !== 'string')
+  if (typeof node_index !== 'string' || !whitelist.test(node_index))
     throw new Error('Invalid node index');
   console.log("Registering node " + node_index + " as reserved peer");
   const cmd = `curl --data '{"method":"parity_enode","params":[],"id":1,"jsonrpc":"2.0"}' -H "Content-Type: application/json" -X POST localhost:854`
@@ -43,7 +33,6 @@ async function inner_main() {
       if (i <= maxAttempts) {
         await sleep(5000);
       } else {
-        console.log(e);
         console.error(e);
         process.exitCode = 1;
       }
@@ -91,4 +80,7 @@ function sleep(millis) {
   return new Promise(resolve => setTimeout(resolve, millis));
 }
 
-main();
+inner_main().catch(e => {
+  console.error(e);
+  process.exitCode = 1;
+});

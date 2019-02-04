@@ -3,10 +3,20 @@
 # Exit on undefined variables.
 set -eu
 
+case $0 in
+   (/*) dir=${0%/*}/;;
+   (*/*) dir=./${0%/*};;
+   (*)  dir=.;;
+esac
+
+cd "$dir/.."
+
+. ./scripts/network-spec
 PARITY=$1
 NODE=`which node`
+# bash scripts/stop-test-setup
 "$NODE" ./scripts/add-validator-balances.js
-for i in 1 2 3; do
+for i in $(seq 1 6); do
     rm -rf -- "./parity-data/node$i/chains"
     "$PARITY" --config "./config/node${i}.toml" > "./parity-data/node${i}/log" 2>&1 &
     "$NODE" ./scripts/getReservedPeer.js "$i" || exit $?
