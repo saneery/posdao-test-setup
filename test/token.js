@@ -1,13 +1,24 @@
 const Token = artifacts.require('ERC677BridgeTokenRewardableMock')
 const constants = require("../utils/constants");
+const BN = web3.utils.BN;
 
 const ValidatorSetContract = require("../utils/getContract")("ValidatorSetAuRa", web3);
 
 contract('TestToken', _accounts => {
+  console.log(_accounts);
+  let has_correct_account = false;
+  for (const i of _accounts) {
+    assert.equal(typeof i, 'string');
+    if (constants.OWNER === i) {
+      has_correct_account = true;
+      break;
+    }
+  }
+  // assert.equal(has_correct_account, true);
   it('should have 2000 initial supply', async () => {
     var instance = await Token.deployed()
     var supply = await instance.totalSupply.call()
-    assert.equal(supply.valueOf(), web3.utils.toWei("2000"), "the initial supply isn't 2000")
+    assert.equal(supply.valueOf().toString(), web3.utils.toWei("2000000000"), "the initial supply isn't 2000")
   })
 
   it('validatorSetContract field value should match ValidatorSet contract address', async () => {
@@ -25,21 +36,22 @@ contract('TestToken', _accounts => {
   it('validator has 1000', async () => {
     var instance = await Token.deployed()
     var balance = await instance.balanceOf.call(constants.VALIDATOR1)
-    assert.equal(balance.valueOf(), web3.utils.toWei("1000"), "the validator doesn't have 1000")
+    assert.equal(balance.valueOf().toString(), web3.utils.toWei("1000000000"), "the validator doesn't have 1000")
   })
 
   it('can stake', async () => {
-    var minStake = await ValidatorSetContract.instance.methods.getCandidateMinStake().call()
+    const minStake = await ValidatorSetContract.instance.methods.getCandidateMinStake().call()
     assert.equal(minStake.valueOf(), web3.utils.toWei("1"), "the min stake isn't 1")
-    var allowed = await ValidatorSetContract.instance.methods.areStakeAndWithdrawAllowed().call()
+    const allowed = await ValidatorSetContract.instance.methods.areStakeAndWithdrawAllowed().call()
     assert.equal(allowed.valueOf(), true, "not allowed")
     let opts = {
-      from: constants.VALIDATOR1,
+      from: constants.OWNER,
       gasPrice: "1",
       gas: "2000000",
     };
+
     try {
-      await ValidatorSetContract.instance.methods.stake(constants.VALIDATOR1, web3.utils.toWei("1000")).send(opts);
+      await ValidatorSetContract.instance.methods.stake(constants.OWNER, web3.utils.toWei("100000")).send(opts);
     } catch (err) {
       console.log(err);
       assert.equal(0, 1);
