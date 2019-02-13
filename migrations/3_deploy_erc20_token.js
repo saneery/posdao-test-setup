@@ -12,6 +12,8 @@ module.exports = async function(deployer) {
 
     console.log("   *** Calling tokenContract.setValidatorSetContract");
     await tokenContract.setValidatorSetContract(ValidatorSetContract.address);
+    await tokenContract.mint(constants.OWNER, web3.utils.toWei("1000000000"));
+    await tokenContract.mint(constants.VALIDATOR1,  web3.utils.toWei("1000000000"));
 
     console.log("   *** Estimating gas for ValidatorSet.setErc20TokenContract");
     let opts = {

@@ -17,15 +17,21 @@ contract('TestToken', async accounts => {
   //   let supply = await instance.totalSupply.call();
   //   assert.equal(supply.valueOf(), 0, "the initial supply isn't 0");
   // });
+  // assert.equal(has_correct_account, true);
+  it('should have 2000 initial supply', async () => {
+    var instance = await Token.deployed()
+    var supply = await instance.totalSupply.call()
+    assert.equal(supply.valueOf().toString(), web3.utils.toWei("2000000000"), "the initial supply isn't 2000")
+  })
 
   it('validatorSetContract field value should match ValidatorSet contract address', async () => {
-    instance = await Token.deployed();
+    const instance = await Token.deployed();
     let validatorSetContractAddress = await instance.validatorSetContract.call();
     assert.equal(validatorSetContractAddress.valueOf(), ValidatorSetContract.address);
   });
 
   it('deployed address should match erc20TokenContract in ValidatorSet contract', async () => {
-    instance = await Token.deployed();
+    const instance = await Token.deployed();
     let erc20TokenContract = await ValidatorSetContract.instance.methods.erc20TokenContract().call();
     assert.equal(erc20TokenContract.valueOf(), instance.address);
   });
