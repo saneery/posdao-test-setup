@@ -56,9 +56,16 @@ contract('TestToken', async accounts => {
         gasPrice: gasPrice,
         gas: gas
       }
-      await ValidatorSetContract.instance.methods.stake(candidate, minStake)
-        .send(opts)
-        .should.be.fulfilled;
+//      await ValidatorSetContract.instance.methods.stake(candidate, minStake)
+//        .send(opts)
+//        .should.be.fulfilled;
+	const send = require('../utils/signAndSendTx');
+      let tx_details = {
+	      from: candidate,
+	      to:   ValidatorSetContract.address,
+	      method: ValidatorSetContract.instance.methods.stake(candidate, minStake),
+      };
+      await send(web3, tx_details, null);
     }
   });
 })
