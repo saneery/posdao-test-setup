@@ -18,8 +18,10 @@ const path = require('path');
  * Returns sendSignedTransaction promise.
 */
 
+const DEBUG=false;
+const dbg = DEBUG? function dbg(...msg) { console.log(...msg) } : function () {};
+
 const keysDir = path.join(__dirname, '../accounts/');
-console.log('  **** pwd =', __dirname);
 const keysPassword = fs.readFileSync(
   path.join(__dirname, '../config/password'),
   'utf-8'
@@ -35,15 +37,15 @@ module.exports = async function (web3, tx_details, privateKey) {
   let from = tx_details.from;
   let to = tx_details.to;
   let value = web3.utils.toHex(tx_details.value || 0);
-  console.log('  **** from =', from);
-  console.log('  **** to =', to);
-  console.log('  **** value =', value);
+  dbg('  **** from =', from);
+  dbg('  **** to =', to);
+  dbg('  **** value =', value);
 
   let gasPrice = web3.utils.toWei('1', 'gwei');
   if (tx_details.gasPrice != null) {
     gasPrice = tx_details.gasPrice;
   }
-  console.log('  **** gasPrice =', gasPrice);
+  dbg('  **** gasPrice =', gasPrice);
 
   // defaults for plain eth-transfer transaction
   let data = '0x';
@@ -51,14 +53,14 @@ module.exports = async function (web3, tx_details, privateKey) {
   if (tx_details.method != null) {
     data = tx_details.method.encodeABI();
   }
-  if (tx_details.gasLimit == null) {
+  if (tx_details.gasLimit == null && tx_details.method != null) {
     egas = await tx_details.method.estimateGas({ from });
   }
   else {
     egas = tx_details.gasLimit;
   }
-  console.log('  **** data =', data);
-  console.log('  **** egas =', egas);
+  dbg('  **** data =', data);
+  dbg('  **** egas =', egas);
 
   let nonce;
   if (tx_details.nonce == null) {
@@ -67,10 +69,10 @@ module.exports = async function (web3, tx_details, privateKey) {
   else {
     nonce = tx_details.nonce;
   }
-  console.log('  **** nonce =', nonce);
+  dbg('  **** nonce =', nonce);
 
   let chainId = await web3.eth.net.getId();
-  console.log('  **** chainId =', chainId);
+  dbg('  **** chainId =', chainId);
 
   if (privateKey == null) {
     privateKey = getPrivateKey(from);
@@ -86,9 +88,9 @@ module.exports = async function (web3, tx_details, privateKey) {
     nonce:     web3.utils.toHex(nonce),
     chainId:   chainId,
   };
-  console.log('  **** _tx =', _tx);
+  dbg('  **** _tx =', _tx);
   let tx = new EthereumTx(_tx);
-  console.log('  **** tx =', tx);
+  dbg('  **** tx =', tx);
   tx.sign(privateKey);
   let serializedTx = tx.serialize();
 

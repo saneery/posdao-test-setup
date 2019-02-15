@@ -6,6 +6,7 @@ require('chai')
 const Token = artifacts.require('ERC677BridgeTokenRewardableMock');
 const ValidatorSetContract = require('../utils/getContract')('ValidatorSetAuRa', web3);
 const constants = require('../utils/constants');
+const SnS = require('../utils/signAndSendTx.js');
 
 contract('TestToken', async accounts => {
   let instance;
@@ -48,45 +49,37 @@ contract('TestToken', async accounts => {
     let minStake = await ValidatorSetContract.instance.methods.getCandidateMinStake().call()
         .should.be.fulfilled;
     console.log('  **** minStake =', minStake);
-    const gasPrice = '1000000000';
-    const gas = '2000000';
-    let fees = new BN(gasPrice).mul(new BN(gas));
-    const send = require('../utils/signAndSendTx');
-    for (var i = 0; i < 1; /*constants.CANDIDATES.length;*/ i++) {
-      let candidate = constants.CANDIDATES[i];
-      // let opts = {
-      //   from: candidate,
-      //   gasPrice: gasPrice,
-      //   gas: gas
-      // }
-//      await ValidatorSetContract.instance.methods.stake(candidate, minStake)
-//        .send(opts)
-//        .should.be.fulfilled;
+    let minStakeBN = new BN(minStake.toString());
 
-      let tx_details = {
-	      from: candidate,
-	      to:   ValidatorSetContract.address,
-	      method: ValidatorSetContract.instance.methods.stake(candidate, minStake),
-        gasLimit: '1000000',
-      };
-      console.log('  **** candidate = ', candidate);
+    for (var i = 0; i < constants.CANDIDATES.length; i++) {
+      let candidate = constants.CANDIDATES[i];
+      console.log('  **** candidate =', candidate);
+
       let ibalance = await instance.balanceOf(candidate);
       let istakeAmount = await ValidatorSetContract.instance.methods.stakeAmount(candidate, candidate).call();
-      console.log('  **** ibalance =', ibalance);
-      console.log('  **** istakeAmount =', istakeAmount);
-      try {
-        var egas = await ValidatorSetContract.instance.methods.stake(candidate, minStake).estimateGas({ from: candidate });
-      }
-      catch (e) {
-        console.log('  **** EXCEPTION: ', e);
-      }
-      let status = await send(web3, tx_details, null);
-      // console.log('  **** tx: status =', status.status, ' hash =', status.transactionHash, ' block number=', status.blockNumber);
-      console.log('  **** tx status:', status);
-      let ebalance = await instance.balanceOf(candidate);
-      let stakeAmount = await ValidatorSetContract.instance.methods.stakeAmount(candidate, candidate).call();
-      console.log('  **** ebalance =', ebalance);
-      console.log('  **** stakeAmount =', stakeAmount);
+      let istakeAmountBN = new BN(istakeAmount.toString());
+      console.log('  ****** initial balance = ' + ibalance);
+      console.log('  ****** initial stakeAmount = ' + istakeAmount);
+
+      let tx_details = {
+          from:     candidate,
+	  to:       ValidatorSetContract.address,
+	  method:   ValidatorSetContract.instance.methods.stake(candidate, minStake),
+          gasLimit: '1000000',
+          gasPrice: '1000000000',
+      };
+      let tx = await SnS(web3, tx_details, null);
+      console.log('  ****** tx: status =', tx.status, ' hash =', tx.transactionHash, ' block number=', tx.blockNumber);
+      // console.log('  **** tx :', tx);
+      tx.status.should.be.equal(true);
+
+      let fbalance = await instance.balanceOf(candidate);
+      let fstakeAmount = await ValidatorSetContract.instance.methods.stakeAmount(candidate, candidate).call();
+      console.log('  **** final balance =', fbalance);
+      console.log('  **** final stakeAmount =', fstakeAmount);
+      let fstakeAmountBN = new BN(fstakeAmount.toString());
+
+      fstakeAmountBN.should.be.bignumber.equal(istakeAmountBN.add(minStakeBN));
     }
   });
 })
