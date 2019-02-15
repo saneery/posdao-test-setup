@@ -35,11 +35,12 @@ contract('TestToken', async accounts => {
     instance = await Token.deployed();
     let minStake = await ValidatorSetContract.instance.methods.getCandidateMinStake().call()
         .should.be.fulfilled;
-    const candidateStake = new BN(minStake.toString());
+    const candidateStake = (new BN(minStake.toString())).mul(new BN('2'));
     for (candidate of constants.CANDIDATES) {
-      const balanceBefore = await instance.balanceOf(candidate);
-      await instance.mint(candidate, candidateStake).should.be.fulfilled;
-      const balanceAfter = await instance.balanceOf(candidate);
+      console.log('  **** candidate =', candidate);
+      const balanceBefore = await instance.balanceOf(candidate.staking);
+      await instance.mint(candidate.staking, candidateStake).should.be.fulfilled;
+      const balanceAfter = await instance.balanceOf(candidate.staking);
       balanceAfter.should.be.bignumber.equal(balanceBefore.add(candidateStake));
     }
   });
@@ -51,20 +52,30 @@ contract('TestToken', async accounts => {
     console.log('  **** minStake =', minStake);
     let minStakeBN = new BN(minStake.toString());
 
-    for (var i = 0; i < constants.CANDIDATES.length; i++) {
-      let candidate = constants.CANDIDATES[i];
+    for (candidate of constants.CANDIDATES) {
       console.log('  **** candidate =', candidate);
+      console.log('  **** add pool. linking staking address ' + candidate.staking + ' with mining address ' + candidate.mining);
+      let pool_tx = await SnS(web3, {
+          from: candidate.staking,
+          to: ValidatorSetContract.address,
+          method: ValidatorSetContract.instance.methods.addPool(minStake, candidate.mining),
+          gasLimit: '1000000',
+          gasPrice: '1000000000',
+      });
+      console.log('  ****** pool_tx: status =', pool_tx.status, 'hash =', pool_tx.hash, 'block number=', pool_tx.blockNumber);
+      // console.log('  ***** pool_tx =', pool_tx);
+      pool_tx.status.should.be.equal(true);
 
-      let ibalance = await instance.balanceOf(candidate);
-      let istakeAmount = await ValidatorSetContract.instance.methods.stakeAmount(candidate, candidate).call();
+      let ibalance = await instance.balanceOf(candidate.staking);
+      let istakeAmount = await ValidatorSetContract.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
       let istakeAmountBN = new BN(istakeAmount.toString());
       console.log('  ****** initial balance = ' + ibalance);
       console.log('  ****** initial stakeAmount = ' + istakeAmount);
 
       let tx_details = {
-          from:     candidate,
+          from:     candidate.staking,
 	  to:       ValidatorSetContract.address,
-	  method:   ValidatorSetContract.instance.methods.stake(candidate, minStake),
+	  method:   ValidatorSetContract.instance.methods.stake(candidate.staking, minStake),
           gasLimit: '1000000',
           gasPrice: '1000000000',
       };
@@ -73,8 +84,8 @@ contract('TestToken', async accounts => {
       // console.log('  **** tx :', tx);
       tx.status.should.be.equal(true);
 
-      let fbalance = await instance.balanceOf(candidate);
-      let fstakeAmount = await ValidatorSetContract.instance.methods.stakeAmount(candidate, candidate).call();
+      let fbalance = await instance.balanceOf(candidate.staking);
+      let fstakeAmount = await ValidatorSetContract.instance.methods.stakeAmount(candidate.staking, candidate.staking).call();
       console.log('  **** final balance =', fbalance);
       console.log('  **** final stakeAmount =', fstakeAmount);
       let fstakeAmountBN = new BN(fstakeAmount.toString());
