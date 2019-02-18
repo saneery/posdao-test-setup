@@ -66,10 +66,9 @@ contract('TestToken', async accounts => {
           from: candidate.staking,
           to: ValidatorSetContract.address,
           method: ValidatorSetContract.instance.methods.addPool(minStake, candidate.mining),
-          gasLimit: '1000000',
           gasPrice: '1000000000',
       });
-      console.log('  ****** pool_tx: status =', pool_tx.status, 'hash =', pool_tx.hash, 'block number=', pool_tx.blockNumber);
+      console.log('  ****** pool_tx: status =', pool_tx.status, 'hash =', pool_tx.transactionHash, 'block number=', pool_tx.blockNumber);
       // console.log('  ***** pool_tx =', pool_tx);
       pool_tx.status.should.be.equal(true);
 
